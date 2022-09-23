@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "CommonJS",
     "esModuleInterop": true,
     "target": "es6",
     "noImplicitAny": true,
@@ -15,7 +15,7 @@
     "project": "api/tsconfig.json",
     "paths": {
       "*": ["node_modules/*"]
-    },
+    }
   },
   "include": ["src", ".eslintrc.js"],
   "exclude": ["node_modules"]

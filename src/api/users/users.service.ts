@@ -1,13 +1,17 @@
 import bcrypt from 'bcryptjs'
 import { User } from '../../entities/user.entity'
 import db from '../../config/typeorm'
+
 const salt = bcrypt.genSaltSync(10)
 
 const userRepository = db.getRepository(User)
 class UserService {
-  static async findOne(data: { email?: string; id?: string }) {
-    const { email, id } = data
-    return await userRepository.findOne({ where: [{ email }, { id }] })
+  static async findOne(email: string) {
+    return userRepository.findOne({ where: { email } })
+  }
+
+  static async findOneById(id: string) {
+    return userRepository.findOne({ where: { id } })
   }
 
   static async create(data: { email: string; password: string; name: string }) {
@@ -22,7 +26,7 @@ class UserService {
 
   static async update(data: { id: string; sessions: string[] }) {
     const { id, sessions } = data
-    return await userRepository.save({ id, sessions })
+    return userRepository.save({ id, sessions })
   }
 
   static async comparePassword(userPassword: string, password: string) {

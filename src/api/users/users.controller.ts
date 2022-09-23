@@ -4,7 +4,6 @@ import {
   EMAIL_PASSWORD_NOMATCH,
   internalServerError,
   missingRequired,
-  NOT_FOUND,
   UNAUTHORIZED,
 } from '../../helpers/responses'
 import UsersService from './users.service'
@@ -24,12 +23,12 @@ class UsersController {
       const ERROR = missingRequired({ email, password, name })
       if (ERROR) return res.status(ERROR.code).json(ERROR)
 
-      const emailExist = await UsersService.findOne({ email })
+      const emailExist = await UsersService.findOne(email)
       if (emailExist) return res.status(EMAIL_EXISTS.code).json(EMAIL_EXISTS)
 
       const user = await UsersService.create({ email, password, name })
 
-      res.json(user)
+      return res.json(user)
     } catch (error) {
       internalServerError(req, res, error)
     }
@@ -41,11 +40,14 @@ class UsersController {
       const ERROR = missingRequired({ email, password })
       if (ERROR) return res.status(ERROR.code).json(ERROR)
 
-      let user = await UsersService.findOne({ email })
-      if (!user) return res.status(NOT_FOUND.code).json(NOT_FOUND)
+      const user = await UsersService.findOne(email)
+      if (!user) return res.status(UNAUTHORIZED.code).json(UNAUTHORIZED)
 
       const match = await UsersService.comparePassword(user.password, password)
-      if (!match) return res.status(EMAIL_PASSWORD_NOMATCH.code).json(EMAIL_PASSWORD_NOMATCH)
+      if (!match)
+        return res
+          .status(EMAIL_PASSWORD_NOMATCH.code)
+          .json(EMAIL_PASSWORD_NOMATCH)
 
       const sessionData = { id: user.id }
       const token = uuidv4()
@@ -58,7 +60,7 @@ class UsersController {
       user.password = ''
       user.sessions = []
 
-      res.json(user)
+      return res.json(user)
     } catch (error) {
       internalServerError(req, res, error)
     }
@@ -70,7 +72,7 @@ class UsersController {
       const { token } = req.cookies
       const { id } = req.me
 
-      const user = await UsersService.findOne(id)
+      const user = await UsersService.findOneById(id)
       if (user) {
         let sessionTokens = user.sessions
         sessionTokens = sessionTokens.filter((t: string) => t !== token)
@@ -80,7 +82,7 @@ class UsersController {
       await session.del(token)
       res.clearCookie('token')
 
-      res.status(204).end()
+      return res.status(204).end()
     } catch (error) {
       internalServerError(req, res, error)
     }
@@ -91,14 +93,14 @@ class UsersController {
       if (!req.me) return res.json(null)
       const { id } = req.me
 
-      const user = await UsersService.findOne({ id })
+      const user = await UsersService.findOneById(id)
       if (!user) return res.status(UNAUTHORIZED.code).json(UNAUTHORIZED)
 
       // Don't leak sensitive data
       user.sessions = []
       user.password = ''
 
-      res.json(user)
+      return res.json(user)
     } catch (error) {
       internalServerError(req, res, error)
     }

@@ -9,7 +9,26 @@ import { logRequests } from './helpers/logger'
 import * as middlewares from './middlewares'
 
 const app = express()
+const { NODE_ENV } = process.env
 
+if (NODE_ENV === 'development') {
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET, POST, OPTIONS, PUT, PATCH, DELETE'
+    )
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'X-Requested-With, content-type'
+    )
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    res.setHeader('Access-Control-Allow-Credentials', true)
+
+    next()
+  })
+}
 app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
